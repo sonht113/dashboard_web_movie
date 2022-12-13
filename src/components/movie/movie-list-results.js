@@ -53,10 +53,10 @@ export const MovieListResults = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {movies.slice(0, limit).map((movie) => (
+              {movies.slice(0, limit).map((movie, index) => (
                 <TableRow
                   hover
-                  key={movie.id}
+                  key={index}
                   selected={selectedCustomerIds.indexOf(movie?.id) !== -1}
                 >
                   <TableCell>
@@ -115,8 +115,4 @@ export const MovieListResults = ({
       />
     </Card>
   );
-};
-
-MovieListResults.propTypes = {
-  customers: PropTypes.array.isRequired,
 };

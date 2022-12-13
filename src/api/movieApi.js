@@ -1,6 +1,10 @@
 import axiosClient from "./axiosClient";
 
 const movieApi = {
+  addMovie: async (data) => {
+    const url = "movie/new";
+    return await axiosClient.post(url, data);
+  },
   getAll: async () => {
     const url = "/movie/list";
     return await axiosClient.get(url);
