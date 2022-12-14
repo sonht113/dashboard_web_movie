@@ -33,9 +33,9 @@ const items = [
     title: "Theater Manage",
   },
   {
-    href: "/manager",
+    href: "/manage-schedule",
     icon: <UsersIcon fontSize="small" />,
-    title: "Manager Manage",
+    title: "Schedule Manage",
   },
   {
     href: "/account",

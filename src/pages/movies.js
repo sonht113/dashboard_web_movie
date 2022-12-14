@@ -47,7 +47,7 @@ const Page = () => {
     language: "",
     status: "",
     createdBy: {
-      id: 0,
+      id: 1,
       name: "sonhn",
     },
   });
@@ -60,9 +60,9 @@ const Page = () => {
   const formData = new FormData();
 
   if (image) {
-    formData.append("image", null);
+    formData.append("image", image);
   }
-  formData.append("movie", JSON.stringify({ ...movie }));
+  formData.append("movie", JSON.stringify(movie));
 
   formData.forEach((i) => console.log(i));
 
@@ -90,33 +90,36 @@ const Page = () => {
     }
   };
 
-  const createMovie = async () => {
-    try {
-      const res = await movieApi.addMovie(formData);
-      console.log("111", res);
-      getAllMovieQuery(keyword, status, page + 1, pageSize);
-      getAllData();
-      setImage(null);
-      setImagePreview("");
-      setMovie({
-        name: "",
-        description: "",
-        realeaseDate: "2022-12-13",
-        duration: 0,
-        director: "",
-        castDescription: "",
-        genreName: "",
-        language: "",
-        status: "",
-        createdBy: {
-          id: 0,
-          name: "sonhn",
-        },
+  const add = async () => {
+    await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/movie/new`, {
+      method: "POST",
+      body: formData,
+    })
+      .then(() => {
+        getAllMovieQuery(keyword, status, page + 1, pageSize);
+        getAllData();
+        setImage(null);
+        setImagePreview("");
+        setMovie({
+          name: "",
+          description: "",
+          realeaseDate: "2022-12-13",
+          duration: 0,
+          director: "",
+          castDescription: "",
+          genreName: "",
+          language: "",
+          status: "",
+          createdBy: {
+            id: 1,
+            name: "sonhn",
+          },
+        });
+        handleClose();
+      })
+      .catch((err) => {
+        console.log(err);
       });
-      handleClose();
-    } catch (err) {
-      console.log(err);
-    }
   };
 
   useEffect(() => {
@@ -240,7 +243,7 @@ const Page = () => {
             <Button onClick={() => handleClose()} variant="contained" color="error">
               Cancel
             </Button>
-            <Button variant="contained" color="success" onClick={() => createMovie()}>
+            <Button variant="contained" color="success" onClick={() => add()}>
               {title}
             </Button>
           </Box>

@@ -39,11 +39,11 @@ export const ManagerListResult = ({ customers, setOpen, setTitle, ...rest }) => 
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Name</TableCell>
+                <TableCell>Movie name</TableCell>
                 <TableCell>Theater name</TableCell>
-                <TableCell>Phone</TableCell>
-                <TableCell>Email</TableCell>
+                <TableCell>Room</TableCell>
                 <TableCell>Create date</TableCell>
+                <TableCell>Status</TableCell>
                 <TableCell align="center">Action</TableCell>
               </TableRow>
             </TableHead>

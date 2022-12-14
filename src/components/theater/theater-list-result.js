@@ -20,7 +20,14 @@ import { getInitials } from "../../utils/get-initials";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 
-export const TheaterListResults = ({ customers, setTitle, setOpen, ...rest }) => {
+export const TheaterListResults = ({
+  customers,
+  setTitle,
+  setOpen,
+  totalPage,
+  theaters,
+  ...rest
+}) => {
   const [selectedCustomerIds, setSelectedCustomerIds] = useState([]);
   const [limit, setLimit] = useState(10);
   const [page, setPage] = useState(0);
@@ -37,7 +44,7 @@ export const TheaterListResults = ({ customers, setTitle, setOpen, ...rest }) =>
     <Card {...rest}>
       <PerfectScrollbar>
         <Box sx={{ minWidth: 1050 }}>
-          <Table>
+          <Table sx={{ overflowX: "scroll" }}>
             <TableHead>
               <TableRow>
                 <TableCell>Theater Name</TableCell>
@@ -49,61 +56,65 @@ export const TheaterListResults = ({ customers, setTitle, setOpen, ...rest }) =>
               </TableRow>
             </TableHead>
             <TableBody>
-              {customers.slice(0, limit).map((customer) => (
-                <TableRow
-                  hover
-                  key={customer.id}
-                  selected={selectedCustomerIds.indexOf(customer.id) !== -1}
-                >
-                  <TableCell>
-                    <Box
-                      sx={{
-                        alignItems: "center",
-                        display: "flex",
-                      }}
-                    >
-                      <Avatar src={customer.avatarUrl} sx={{ mr: 2 }}>
-                        {getInitials(customer.name)}
-                      </Avatar>
-                      <Typography color="textPrimary" variant="body1">
-                        {customer.name}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>{customer.email}</TableCell>
-                  <TableCell>
-                    {`${customer.address.city}, ${customer.address.state}, ${customer.address.country}`}
-                  </TableCell>
-                  <TableCell>{customer.phone}</TableCell>
-                  <TableCell>2022-12-09</TableCell>
-                  <TableCell align="center">
-                    <Button
-                      onClick={() => {
-                        setTitle("Update");
-                        setOpen(true);
-                      }}
-                    >
-                      <RemoveRedEyeIcon color="success" />
-                    </Button>
-                    <Button>
-                      <DeleteForeverIcon color="error" />
-                    </Button>
+              {theaters && theaters.length !== 0 ? (
+                theaters.map((item, index) => (
+                  <TableRow hover key={index}>
+                    <TableCell>
+                      <Box
+                        sx={{
+                          alignItems: "center",
+                          display: "flex",
+                        }}
+                      >
+                        <Avatar src={item.avatarUrl} sx={{ mr: 2 }}>
+                          {getInitials(item.name)}
+                        </Avatar>
+                        <Typography color="textPrimary" variant="body1">
+                          {item.name}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>{item.address}</TableCell>
+                    <TableCell>{item.hotline}</TableCell>
+                    <TableCell>{item.manager}</TableCell>
+                    <TableCell>2022-12-09</TableCell>
+                    <TableCell align="center">
+                      <Button
+                        onClick={() => {
+                          setTitle("Update");
+                          setOpen(true);
+                        }}
+                      >
+                        <RemoveRedEyeIcon color="success" />
+                      </Button>
+                      <Button>
+                        <DeleteForeverIcon color="error" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} sx={{ textAlign: "center" }}>
+                    Not have any theater
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </Box>
       </PerfectScrollbar>
-      <TablePagination
-        component="div"
-        count={customers.length}
-        onPageChange={handlePageChange}
-        onRowsPerPageChange={handleLimitChange}
-        page={page}
-        rowsPerPage={limit}
-        rowsPerPageOptions={[5, 10, 25]}
-      />
+      {totalPage !== 0 && (
+        <TablePagination
+          component="div"
+          count={customers.length}
+          onPageChange={handlePageChange}
+          onRowsPerPageChange={handleLimitChange}
+          page={page}
+          rowsPerPage={limit}
+          rowsPerPageOptions={[5, 10, 25]}
+        />
+      )}
     </Card>
   );
 };

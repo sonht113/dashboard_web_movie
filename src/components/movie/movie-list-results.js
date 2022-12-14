@@ -105,14 +105,16 @@ export const MovieListResults = ({
           </Table>
         </Box>
       </PerfectScrollbar>
-      <TablePagination
-        component="div"
-        count={totalPage}
-        onPageChange={handlePageChange}
-        page={page}
-        rowsPerPage={limit}
-        rowsPerPageOptions={[5, 10, 25]}
-      />
+      {totalPage !== 0 && (
+        <TablePagination
+          component="div"
+          count={totalPage}
+          onPageChange={handlePageChange}
+          page={page}
+          rowsPerPage={limit}
+          rowsPerPageOptions={[5, 10, 25]}
+        />
+      )}
     </Card>
   );
 };

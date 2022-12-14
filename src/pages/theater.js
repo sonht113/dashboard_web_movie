@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Container,
@@ -29,6 +29,7 @@ import { TheaterListToolbar } from "../components/theater/theater-list-toolbar";
 import { TheaterListResults } from "../components/theater/theater-list-result";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { customers } from "../__mocks__/customers";
+import theaterApi from "../api/theaterApi";
 
 const styleStack = {
   width: 700,
@@ -58,13 +59,44 @@ const Page = () => {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("Create");
   const [age, setAge] = useState("");
+  const [page, setPage] = useState(0);
+  const [totalPage, setTotalPage] = useState(0);
+  const [search, setSearch] = useState("");
+  const [theaters, setTheaters] = useState([]);
+  const limit = 5;
 
-  const handleOpen = () => setOpen(true);
+  const getAllData = async () => {
+    try {
+      const res = await theaterApi.getAll();
+      if (!res) return;
+      setTotalPage(res.length);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const getTheaterByQuery = async (search, page, limit) => {
+    try {
+      const res = await theaterApi.getAllQuery(search, page, limit);
+      if (!res) return;
+      setTheaters(res);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   const handleClose = () => setOpen(false);
 
   const handleChange = (event) => {
     setAge(event.target.value);
   };
+
+  useEffect(() => {
+    getAllData();
+  }, []);
+  useEffect(() => {
+    getTheaterByQuery(search, page + 1, limit);
+  }, [page, search]);
 
   return (
     <>
@@ -198,7 +230,13 @@ const Page = () => {
         <Container maxWidth={false}>
           <TheaterListToolbar setOpen={setOpen} setTitle={setTitle} />
           <Box sx={{ mt: 3 }}>
-            <TheaterListResults setOpen={setOpen} setTitle={setTitle} customers={customers} />
+            <TheaterListResults
+              theaters={theaters}
+              totalPage={totalPage}
+              setOpen={setOpen}
+              setTitle={setTitle}
+              customers={customers}
+            />
           </Box>
         </Container>
       </Box>

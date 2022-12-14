@@ -2,7 +2,7 @@ import axiosClient from "./axiosClient";
 
 const movieApi = {
   addMovie: async (data) => {
-    const url = "movie/new";
+    const url = "/movie/new";
     return await axiosClient.post(url, data);
   },
   getAll: async () => {
@@ -48,6 +48,7 @@ const movieApi = {
       },
     });
   },
+  updateMovie: async (id, data) => {},
 };
 
 export default movieApi;

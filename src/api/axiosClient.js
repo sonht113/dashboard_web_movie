@@ -1,11 +1,8 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import axios from "axios";
 import { toast } from "react-toastify";
 
 const axiosClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_SERVER_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 // Add a request interceptor
