@@ -28,6 +28,9 @@ export const MovieListResults = ({
   setPage,
   handleOpen,
   setTitle,
+  setMovie,
+  getDetailMovie,
+  deleteMovie,
   ...rest
 }) => {
   const [selectedCustomerIds, setSelectedCustomerIds] = useState([]);
@@ -40,8 +43,8 @@ export const MovieListResults = ({
   return (
     <Card {...rest}>
       <PerfectScrollbar>
-        <Box sx={{ minWidth: 1050 }}>
-          <Table>
+        <Box>
+          <Table sx={{ overflowX: "hidden" }}>
             <TableHead>
               <TableRow>
                 <TableCell>Name</TableCell>
@@ -89,13 +92,12 @@ export const MovieListResults = ({
                   <TableCell align="center" padding="10px">
                     <Button
                       onClick={() => {
-                        setTitle("Update");
-                        handleOpen();
+                        getDetailMovie(movie.id);
                       }}
                     >
                       <RemoveRedEyeIcon color="success" />
                     </Button>
-                    <Button>
+                    <Button onClick={() => deleteMovie(movie?.id)}>
                       <DeleteForeverIcon color="error" />
                     </Button>
                   </TableCell>

@@ -30,40 +30,51 @@ import { TheaterListResults } from "../components/theater/theater-list-result";
 import { DashboardLayout } from "../components/dashboard-layout";
 import { customers } from "../__mocks__/customers";
 import theaterApi from "../api/theaterApi";
+import { notifyFail, notifySuccess } from "../helpers/notifi";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer, toast } from "react-toastify";
 
 const styleStack = {
   width: 700,
   margin: "0 auto",
 };
 
-const itemData = [
-  {
-    img: "https://images.unsplash.com/photo-1551963831-b3b1ca40c98e",
-    title: "Breakfast",
+const currentTheater = {
+  name: "",
+  address: "",
+  hostline: "",
+  description: "",
+  manager_name: {
+    id: 13,
+    name: "",
   },
-  {
-    img: "https://images.unsplash.com/photo-1551782450-a2132b4ba21d",
-    title: "Burger",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1522770179533-24471fcdba45",
-    title: "Camera",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1444418776041-9c7e33cc5a9c",
-    title: "Coffee",
-  },
-];
+};
 
 const Page = () => {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("Create");
-  const [age, setAge] = useState("");
   const [page, setPage] = useState(0);
   const [totalPage, setTotalPage] = useState(0);
   const [search, setSearch] = useState("");
   const [theaters, setTheaters] = useState([]);
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [dataForm, setDataForm] = useState({ ...currentTheater });
+  const [idUpdate, setIdUpdate] = useState("");
   const limit = 5;
+  const formData = new FormData();
+
+  if (image) {
+    formData.append("image", image);
+  }
+  formData.append("theaterDto", JSON.stringify(formData));
+
+  const handleClose = () => {
+    setImagePreview("");
+    setDataForm({ ...currentTheater });
+    setImage(null);
+    setOpen(false);
+  };
 
   const getAllData = async () => {
     try {
@@ -85,10 +96,55 @@ const Page = () => {
     }
   };
 
-  const handleClose = () => setOpen(false);
+  const getDetail = async (id) => {
+    try {
+      const res = await theaterApi.getDetail(id);
+      if (!res) return;
+      setDataForm({ ...res });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-  const handleChange = (event) => {
-    setAge(event.target.value);
+  const add = async () => {
+    await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/theater/new`, {
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => {
+        if (res.status == 200) {
+          notifySuccess("Create");
+          handleClose();
+          getAllData();
+          getTheaterByQuery(search, page + 1, limit);
+        } else {
+          notifyFail("Create");
+          notifyFail("Create", "exist");
+        }
+      })
+      .catch((err) => {
+        notifyFail("Create");
+        notifyFail("Create", "exist");
+      });
+  };
+
+  const deleteTheater = async (id) => {
+    await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/theater/delete/${id}`, {
+      method: "DELETE",
+    })
+      .then((res) => {
+        if (res.status == 200) {
+          notifySuccess("Delete");
+          handleClose();
+          getAllData();
+          getTheaterByQuery(search, page + 1, limit);
+        } else {
+          notifyFail("Delete");
+        }
+      })
+      .catch((err) => {
+        notifyFail("Delete");
+      });
   };
 
   useEffect(() => {
@@ -100,6 +156,18 @@ const Page = () => {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <Modal
         aria-labelledby="transition-modal-title"
         aria-describedby="transition-modal-description"
@@ -111,111 +179,16 @@ const Page = () => {
           timeout: 500,
         }}
       >
-        <Box
-          sx={{
-            height: 700,
-            bgcolor: "background.paper",
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 800,
-            borderRadius: "10px",
-            p: 4,
-            overflowY: "scroll",
-          }}
-        >
-          <Typography sx={{ marginBottom: 10 }} variant="h4" align="center">
-            {title} Theater
-          </Typography>
-          <Stack spacing={5} sx={styleStack}>
-            <TextField label="Theater name" type="text" />
-            <TextField label="Address" type="text" />
-            <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
-              <InputLabel id="demo-select-small">Manager</InputLabel>
-              <Select
-                labelId="demo-select-small"
-                id="demo-select-small"
-                value={age}
-                label="Manager"
-                onChange={handleChange}
-              >
-                <MenuItem value="">
-                  <em>None</em>
-                </MenuItem>
-                <MenuItem value={10}>Ten</MenuItem>
-                <MenuItem value={20}>Twenty</MenuItem>
-                <MenuItem value={30}>Thirty</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField label="Holine" type="text" />
-            <Box sx={{ width: 700 }}>
-              <Typography>Description:</Typography>
-              <textarea
-                title="Description"
-                rows={8}
-                style={{ width: "100%", outline: "none", padding: "10px" }}
-                placeholder="Description"
-              />
-            </Box>
-            <Box>
-              <Box sx={{ display: "flex", justifyContent: "start", alignItems: "center", gap: 3 }}>
-                <Typography>Image:</Typography>
-                <Button variant="contained" component="label" sx={{ marginBottom: 2 }}>
-                  Upload
-                  <input
-                    hidden
-                    accept="image/*"
-                    type="file"
-                    onChange={(e) => {
-                      console.log(e.target.files);
-                    }}
-                  />
-                </Button>
-              </Box>
-              <img
-                width={700}
-                src="https://c.wallhere.com/images/d0/d0/3c9203dca6873e85879197389228-1520111.jpg!d"
-              />
-            </Box>
-            <Box>
-              <Typography variant="h5">Room</Typography>
-              <Box>
-                <FormCreateMovie />
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Name</TableCell>
-                      <TableCell>Screen</TableCell>
-                      <TableCell>Speaker</TableCell>
-                      <TableCell>Action</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>One piece</TableCell>
-                      <TableCell>XY Screen air 150</TableCell>
-                      <TableCell>NS_123</TableCell>
-                      <TableCell>
-                        <Button>
-                          <DeleteForeverIcon color="error" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </Box>
-            </Box>
-          </Stack>
-          <Box sx={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 2 }}>
-            <Button onClick={() => handleClose()} variant="contained" color="error">
-              Cancel
-            </Button>
-            <Button variant="contained" color="success">
-              {title}
-            </Button>
-          </Box>
-        </Box>
+        <FormCreateTheater
+          setDataForm={setDataForm}
+          dataForm={dataForm}
+          handleClose={handleClose}
+          title={title}
+          setImagePreview={setImagePreview}
+          imagePreview={imagePreview}
+          setImage={setImage}
+          add={add}
+        />
       </Modal>
       <Head>
         <title>Products | Material Kit</title>
@@ -231,6 +204,9 @@ const Page = () => {
           <TheaterListToolbar setOpen={setOpen} setTitle={setTitle} />
           <Box sx={{ mt: 3 }}>
             <TheaterListResults
+              setIdUpdate={setIdUpdate}
+              getDetail={getDetail}
+              deleteTheater={deleteTheater}
               theaters={theaters}
               totalPage={totalPage}
               setOpen={setOpen}
@@ -246,7 +222,169 @@ const Page = () => {
 
 Page.getLayout = (page) => <DashboardLayout>{page}</DashboardLayout>;
 
-const FormCreateMovie = () => {
+const FormCreateTheater = ({
+  title,
+  handleClose,
+  setDataForm,
+  dataForm,
+  setImagePreview,
+  imagePreview,
+  setImage,
+  add,
+}) => {
+  return (
+    <Box
+      sx={{
+        height: 700,
+        bgcolor: "background.paper",
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        width: 800,
+        borderRadius: "10px",
+        p: 4,
+        overflowY: "scroll",
+      }}
+    >
+      <Typography sx={{ marginBottom: 10 }} variant="h4" align="center">
+        {title} Theater
+      </Typography>
+      <Stack spacing={5} sx={styleStack}>
+        <TextField
+          label="Theater name"
+          type="text"
+          value={dataForm?.name}
+          onChange={(e) => setDataForm({ ...dataForm, name: e.target.value })}
+        />
+        <TextField
+          label="Address"
+          type="text"
+          value={dataForm?.address}
+          onChange={(e) => setDataForm({ ...dataForm, address: e.target.value })}
+        />
+        <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
+          <InputLabel id="demo-select-small">Manager</InputLabel>
+          <Select
+            labelId="demo-select-small"
+            label="Manager"
+            value={dataForm?.manager_name?.name}
+            onChange={(e) =>
+              setDataForm({
+                ...dataForm,
+                manager_name: {
+                  id: 13,
+                  name: e.target.value,
+                },
+              })
+            }
+          >
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
+            <MenuItem value={"son"}>Son</MenuItem>
+            <MenuItem value={"duc"}>Duc</MenuItem>
+            <MenuItem value={"hai"}>Hai</MenuItem>
+          </Select>
+        </FormControl>
+        <TextField
+          label="Hotline"
+          type="text"
+          value={dataForm.hostline}
+          onChange={(e) => setDataForm({ ...dataForm, hostline: e.target.value })}
+        />
+        <Box sx={{ width: 700 }}>
+          <Typography>Description:</Typography>
+          <textarea
+            onChange={(e) => setDataForm({ ...dataForm, description: e.target.value })}
+            title="Description"
+            value={dataForm.description}
+            rows={8}
+            style={{ width: "100%", outline: "none", padding: "10px" }}
+            placeholder="Description"
+          />
+        </Box>
+        <Box>
+          <Box sx={{ display: "flex", justifyContent: "start", alignItems: "center", gap: 3 }}>
+            <Typography>Image:</Typography>
+            <Button variant="contained" component="label" sx={{ marginBottom: 2 }}>
+              Upload
+              <input
+                hidden
+                accept="image/*"
+                type="file"
+                onChange={(e) => {
+                  setImagePreview(URL.createObjectURL(e.target.files[0]));
+                  setImage(e.target.files[0]);
+                }}
+              />
+            </Button>
+          </Box>
+          {imagePreview && <img width={300} src={imagePreview} alt={"preview"} />}
+        </Box>
+        {title !== "Create" && (
+          <Box>
+            <Typography variant="h5">Room</Typography>
+            <Box>
+              <FormCreateRoom />
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Screen</TableCell>
+                    <TableCell>Speaker</TableCell>
+                    <TableCell>Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>One piece</TableCell>
+                    <TableCell>XY Screen air 150</TableCell>
+                    <TableCell>NS_123</TableCell>
+                    <TableCell>
+                      <Button>
+                        <DeleteForeverIcon color="error" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </Box>
+          </Box>
+        )}
+      </Stack>
+      <Box sx={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 2 }}>
+        <Button onClick={() => handleClose()} variant="contained" color="error">
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          color="success"
+          disabled={
+            !(
+              dataForm?.name &&
+              dataForm?.description &&
+              dataForm?.manager_name?.name &&
+              dataForm?.address &&
+              dataForm?.hostline
+            )
+          }
+          onClick={() => {
+            if (title === "Create") {
+              add();
+            } else {
+              return;
+            }
+          }}
+        >
+          {title}
+        </Button>
+      </Box>
+    </Box>
+  );
+};
+
+const FormCreateRoom = () => {
   const [openChildModal, setOpenChildModal] = useState(false);
 
   return (

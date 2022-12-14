@@ -28,6 +28,10 @@ const theaterApi = {
       },
     });
   },
+  getDetail: async (id) => {
+    const url = `/theater/get/${id}`;
+    return await axiosClient.get(url);
+  },
 };
 
 export default theaterApi;

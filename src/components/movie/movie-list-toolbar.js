@@ -15,7 +15,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import { Upload as UploadIcon } from "../../icons/upload";
 import { Download as DownloadIcon } from "../../icons/download";
 
-export const MovieListToolbar = ({ handleOpen, setTitle, setKeyword, keyword }) => {
+export const MovieListToolbar = ({ handleOpen, setKeyword, keyword }) => {
   const [showClearIcon, setShowClearIcon] = useState("none");
 
   const handleChange = (event) => {
@@ -69,7 +69,6 @@ export const MovieListToolbar = ({ handleOpen, setTitle, setKeyword, keyword }) 
         <Box sx={{ m: 1 }}>
           <Button
             onClick={() => {
-              setTitle("Create");
               handleOpen();
             }}
             color="primary"

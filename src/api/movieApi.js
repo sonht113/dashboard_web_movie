@@ -48,7 +48,14 @@ const movieApi = {
       },
     });
   },
-  updateMovie: async (id, data) => {},
+  getDetail: async (id) => {
+    const url = `/movie/get/${id}`;
+    return await axiosClient.get(url);
+  },
+  updateMovie: async (id, data) => {
+    const url = `/movie/update/${id}`;
+    return await axiosClient.put(url, data);
+  },
 };
 
 export default movieApi;

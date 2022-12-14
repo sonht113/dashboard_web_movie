@@ -26,9 +26,11 @@ export const TheaterListResults = ({
   setOpen,
   totalPage,
   theaters,
+  deleteTheater,
+  getDetail,
+  setIdUpdate,
   ...rest
 }) => {
-  const [selectedCustomerIds, setSelectedCustomerIds] = useState([]);
   const [limit, setLimit] = useState(10);
   const [page, setPage] = useState(0);
 
@@ -58,7 +60,7 @@ export const TheaterListResults = ({
             <TableBody>
               {theaters && theaters.length !== 0 ? (
                 theaters.map((item, index) => (
-                  <TableRow hover key={index}>
+                  <TableRow key={index}>
                     <TableCell>
                       <Box
                         sx={{
@@ -66,28 +68,30 @@ export const TheaterListResults = ({
                           display: "flex",
                         }}
                       >
-                        <Avatar src={item.avatarUrl} sx={{ mr: 2 }}>
+                        {/* <Avatar src={item.avatarUrl} sx={{ mr: 2 }}>
                           {getInitials(item.name)}
-                        </Avatar>
+                        </Avatar> */}
                         <Typography color="textPrimary" variant="body1">
-                          {item.name}
+                          {item.theaterName}
                         </Typography>
                       </Box>
                     </TableCell>
                     <TableCell>{item.address}</TableCell>
-                    <TableCell>{item.hotline}</TableCell>
-                    <TableCell>{item.manager}</TableCell>
-                    <TableCell>2022-12-09</TableCell>
+                    <TableCell>{item.hostline}</TableCell>
+                    <TableCell>{item.manager ? item.manager : "-"}</TableCell>
+                    <TableCell>{item.create}</TableCell>
                     <TableCell align="center">
                       <Button
                         onClick={() => {
                           setTitle("Update");
                           setOpen(true);
+                          getDetail(item.id);
+                          setIdUpdate(item.id);
                         }}
                       >
                         <RemoveRedEyeIcon color="success" />
                       </Button>
-                      <Button>
+                      <Button onClick={() => deleteTheater(item.id)}>
                         <DeleteForeverIcon color="error" />
                       </Button>
                     </TableCell>
