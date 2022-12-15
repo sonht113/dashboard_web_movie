@@ -1,18 +1,6 @@
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  TextField,
-  InputAdornment,
-  SvgIcon,
-  Typography,
-} from "@mui/material";
-import { Search as SearchIcon } from "../../icons/search";
-import { Upload as UploadIcon } from "../../icons/upload";
-import { Download as DownloadIcon } from "../../icons/download";
+import { Box, Button, Typography } from "@mui/material";
 
-export const ManagerListToolbar = ({ setOpen, setTitle }) => {
+export const ManagerListToolbar = ({ setOpen, getAllTheater, setTitle, getAllMoive }) => {
   return (
     <Box>
       <Box
@@ -25,18 +13,20 @@ export const ManagerListToolbar = ({ setOpen, setTitle }) => {
         }}
       >
         <Typography sx={{ m: 1 }} variant="h4">
-          Manager
+          Schedule
         </Typography>
         <Box sx={{ m: 1 }}>
           <Button
             color="primary"
             variant="contained"
             onClick={() => {
+              getAllMoive();
+              getAllTheater();
               setTitle("Create");
               setOpen(true);
             }}
           >
-            Add Manager
+            Add Schedule
           </Button>
         </Box>
       </Box>
