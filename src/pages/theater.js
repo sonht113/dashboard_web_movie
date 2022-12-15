@@ -33,6 +33,7 @@ import theaterApi from "../api/theaterApi";
 import { notifyFail, notifySuccess } from "../helpers/notifi";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, toast } from "react-toastify";
+import roomApi from "../api/roomApi";
 
 const styleStack = {
   width: 700,
@@ -61,13 +62,27 @@ const Page = () => {
   const [imagePreview, setImagePreview] = useState("");
   const [dataForm, setDataForm] = useState({ ...currentTheater });
   const [idUpdate, setIdUpdate] = useState("");
+  const [room, setRoom] = useState({
+    roomName: "",
+    screen: "",
+    speaker: "",
+  });
+  const [rooms, setRooms] = useState([]);
   const limit = 5;
   const formData = new FormData();
 
-  if (image) {
-    formData.append("image", image);
+  if (title == "Create") {
+    if (image) {
+      formData.append("image", image);
+    }
+    formData.append("theaterDto", JSON.stringify(formData));
+  } else {
+    if (image) {
+      formData.append("avatars", image);
+    }
+    formData.append("theaterDto", JSON.stringify(formData));
+    formData.forEach((i) => console.log(i));
   }
-  formData.append("theaterDto", JSON.stringify(formData));
 
   const handleClose = () => {
     setImagePreview("");
@@ -96,11 +111,17 @@ const Page = () => {
     }
   };
 
-  const getDetail = async (id) => {
+  const getDetail = async (idTheater) => {
     try {
-      const res = await theaterApi.getDetail(id);
+      const res = await theaterApi.getDetail(idTheater);
       if (!res) return;
-      setDataForm({ ...res });
+      setDataForm({
+        theater_name: res.name,
+        address: res.address,
+        description: res.description,
+        hostline: res.hostline,
+        manager_name: { id: res?.manager?.id, name: res?.manager?.name },
+      });
     } catch (error) {
       console.log(error);
     }
@@ -128,6 +149,26 @@ const Page = () => {
       });
   };
 
+  const update = async () => {
+    await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/theater/update/${idUpdate}`, {
+      method: "PUT",
+      body: formData,
+    })
+      .then((res) => {
+        if (res.status == 200) {
+          notifySuccess("Update");
+          handleClose();
+          getAllData();
+          getTheaterByQuery(search, page + 1, limit);
+        } else {
+          notifyFail("Update");
+        }
+      })
+      .catch((err) => {
+        notifyFail("Update", "exist");
+      });
+  };
+
   const deleteTheater = async (id) => {
     await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/theater/delete/${id}`, {
       method: "DELETE",
@@ -145,6 +186,41 @@ const Page = () => {
       .catch((err) => {
         notifyFail("Delete");
       });
+  };
+
+  const getRoom = async (id) => {
+    try {
+      const res = await roomApi.getByTheater(id);
+      if (!res) return;
+      setRooms([...res]);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const createRoom = async (close) => {
+    try {
+      const res = await roomApi.add(idUpdate, room);
+      if (!res) return;
+      notifySuccess("Create");
+      getRoom(idUpdate);
+      close();
+      console.log(res);
+    } catch (err) {
+      notifyFail("Create");
+      console.log(err);
+    }
+  };
+
+  const deleteRoom = async (id) => {
+    try {
+      await roomApi.delete(id);
+      getRoom(idUpdate);
+      notifySuccess("Delete");
+    } catch (err) {
+      notifyFail("Delete");
+      console.log(err);
+    }
   };
 
   useEffect(() => {
@@ -180,14 +256,20 @@ const Page = () => {
         }}
       >
         <FormCreateTheater
+          rooms={rooms}
+          createRoom={createRoom}
           setDataForm={setDataForm}
           dataForm={dataForm}
           handleClose={handleClose}
           title={title}
           setImagePreview={setImagePreview}
           imagePreview={imagePreview}
+          setRoom={setRoom}
+          room={room}
           setImage={setImage}
           add={add}
+          update={update}
+          deleteRoom={deleteRoom}
         />
       </Modal>
       <Head>
@@ -206,6 +288,7 @@ const Page = () => {
             <TheaterListResults
               setIdUpdate={setIdUpdate}
               getDetail={getDetail}
+              getRoom={getRoom}
               deleteTheater={deleteTheater}
               theaters={theaters}
               totalPage={totalPage}
@@ -226,11 +309,17 @@ const FormCreateTheater = ({
   title,
   handleClose,
   setDataForm,
+  setRoom,
+  room,
   dataForm,
   setImagePreview,
   imagePreview,
+  createRoom,
   setImage,
+  rooms,
   add,
+  update,
+  deleteRoom,
 }) => {
   return (
     <Box
@@ -254,8 +343,14 @@ const FormCreateTheater = ({
         <TextField
           label="Theater name"
           type="text"
-          value={dataForm?.name}
-          onChange={(e) => setDataForm({ ...dataForm, name: e.target.value })}
+          value={dataForm.name ? dataForm.name : dataForm.theater_name}
+          onChange={(e) => {
+            if (title === "Create") {
+              setDataForm({ ...dataForm, name: e.target.value });
+            } else {
+              setDataForm({ ...dataForm, theater_name: e.target.value });
+            }
+          }}
         />
         <TextField
           label="Address"
@@ -282,9 +377,9 @@ const FormCreateTheater = ({
             <MenuItem value="">
               <em>None</em>
             </MenuItem>
-            <MenuItem value={"son"}>Son</MenuItem>
-            <MenuItem value={"duc"}>Duc</MenuItem>
-            <MenuItem value={"hai"}>Hai</MenuItem>
+            <MenuItem value={"Son"}>Son</MenuItem>
+            <MenuItem value={"Duc"}>Duc</MenuItem>
+            <MenuItem value={"Hai"}>Hai</MenuItem>
           </Select>
         </FormControl>
         <TextField
@@ -306,7 +401,7 @@ const FormCreateTheater = ({
         </Box>
         <Box>
           <Box sx={{ display: "flex", justifyContent: "start", alignItems: "center", gap: 3 }}>
-            <Typography>Image:</Typography>
+            <Typography>Choose image:</Typography>
             <Button variant="contained" component="label" sx={{ marginBottom: 2 }}>
               Upload
               <input
@@ -326,7 +421,7 @@ const FormCreateTheater = ({
           <Box>
             <Typography variant="h5">Room</Typography>
             <Box>
-              <FormCreateRoom />
+              <FormCreateRoom room={room} setRoom={setRoom} createRoom={createRoom} />
               <Table>
                 <TableHead>
                   <TableRow>
@@ -337,23 +432,33 @@ const FormCreateTheater = ({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  <TableRow>
-                    <TableCell>One piece</TableCell>
-                    <TableCell>XY Screen air 150</TableCell>
-                    <TableCell>NS_123</TableCell>
-                    <TableCell>
-                      <Button>
-                        <DeleteForeverIcon color="error" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                  {rooms.length > 0 ? (
+                    rooms.map((room, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{room.roomName}</TableCell>
+                        <TableCell>{room.screen}</TableCell>
+                        <TableCell>{room.speaker}</TableCell>
+                        <TableCell>
+                          <Button onClick={() => deleteRoom(room.id)}>
+                            <DeleteForeverIcon color="error" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} sx={{ textAlign: "center" }}>
+                        Not have any room
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </Box>
           </Box>
         )}
       </Stack>
-      <Box sx={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 2 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 10 }}>
         <Button onClick={() => handleClose()} variant="contained" color="error">
           Cancel
         </Button>
@@ -362,7 +467,7 @@ const FormCreateTheater = ({
           color="success"
           disabled={
             !(
-              dataForm?.name &&
+              (dataForm?.name || dataForm?.theater_name) &&
               dataForm?.description &&
               dataForm?.manager_name?.name &&
               dataForm?.address &&
@@ -373,7 +478,7 @@ const FormCreateTheater = ({
             if (title === "Create") {
               add();
             } else {
-              return;
+              update();
             }
           }}
         >
@@ -384,9 +489,12 @@ const FormCreateTheater = ({
   );
 };
 
-const FormCreateRoom = () => {
+const FormCreateRoom = ({ createRoom, room, setRoom }) => {
   const [openChildModal, setOpenChildModal] = useState(false);
 
+  const handleClose = () => {
+    setOpenChildModal(false);
+  };
   return (
     <>
       <Button
@@ -422,16 +530,28 @@ const FormCreateRoom = () => {
           </Typography>
           <Box sx={{ mb: 4 }}>
             <Stack spacing={5}>
-              <TextField label="Name Movie" type="text" />
-              <TextField label="Screen" type="text" />
-              <TextField label="Speaker" type="text" />
+              <TextField
+                label="Name Movie"
+                type="text"
+                onChange={(e) => setRoom({ ...room, roomName: e.target.value })}
+              />
+              <TextField
+                label="Screen"
+                type="text"
+                onChange={(e) => setRoom({ ...room, screen: e.target.value })}
+              />
+              <TextField
+                label="Speaker"
+                type="text"
+                onChange={(e) => setRoom({ ...room, speaker: e.target.value })}
+              />
             </Stack>
           </Box>
           <Box style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10 }}>
             <Button variant="contained" color="error" onClick={() => setOpenChildModal(false)}>
               Cancel
             </Button>
-            <Button variant="contained" color="success">
+            <Button variant="contained" color="success" onClick={() => createRoom(handleClose)}>
               Create
             </Button>
           </Box>

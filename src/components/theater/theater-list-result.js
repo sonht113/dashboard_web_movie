@@ -29,6 +29,7 @@ export const TheaterListResults = ({
   deleteTheater,
   getDetail,
   setIdUpdate,
+  getRoom,
   ...rest
 }) => {
   const [limit, setLimit] = useState(10);
@@ -78,15 +79,16 @@ export const TheaterListResults = ({
                     </TableCell>
                     <TableCell>{item.address}</TableCell>
                     <TableCell>{item.hostline}</TableCell>
-                    <TableCell>{item.manager ? item.manager : "-"}</TableCell>
+                    <TableCell>{item?.manager?.name ? item?.manager?.name : "-"}</TableCell>
                     <TableCell>{item.create}</TableCell>
                     <TableCell align="center">
                       <Button
                         onClick={() => {
                           setTitle("Update");
                           setOpen(true);
-                          getDetail(item.id);
+                          getDetail(item?.id);
                           setIdUpdate(item.id);
+                          getRoom(item.id);
                         }}
                       >
                         <RemoveRedEyeIcon color="success" />
