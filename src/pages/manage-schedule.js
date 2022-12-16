@@ -332,12 +332,12 @@ const FormSchedule = ({
             onChange={(newValue) => {
               setSchedule({
                 ...schedule,
-                time: `${newValue.$y}-${newValue.$M + 1}-${newValue.$D} ${newValue.$H}:${
-                  newValue.$m
-                }:${newValue.$s}`,
-                startTime: `${newValue.$y}-${newValue.$M + 1}-${newValue.$D} ${newValue.$H}:${
-                  newValue.$m
-                }:${newValue.$s}`,
+                time: `${newValue.$y}-${newValue.$M + 1}-${newValue.$D} ${
+                  newValue.$H < 10 ? `0${newValue.$H}` : newValue.$H
+                }:${newValue.$m < 10 ? `0${newValue.$m}` : newValue.$m}:${newValue.$s}`,
+                startTime: `${newValue.$y}-${newValue.$M + 1}-${newValue.$D} ${
+                  newValue.$H < 10 ? `0${newValue.$H}` : newValue.$H
+                }:${newValue.$m < 10 ? `0${newValue.$m}` : newValue.$m}:${newValue.$s}`,
                 date: `${newValue.$y}-${newValue.$M + 1}-${newValue.$D}`,
               });
             }}
