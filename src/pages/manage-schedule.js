@@ -27,6 +27,7 @@ import movieApi from "../api/movieApi";
 import theaterApi from "../api/theaterApi";
 import roomApi from "../api/roomApi";
 import scheduleApi from "../api/scheduleApi";
+import { notifySuccess, notifyFail } from "../helpers/notifi";
 
 const styleStack = {
   width: 500,
@@ -37,7 +38,7 @@ const currentSchedule = {
   time: "",
   price: "50",
   duration: "",
-  startTime: dayjs(new Date()),
+  startTime: new Date(),
   description: "",
   date: "",
 };
@@ -48,30 +49,35 @@ const Page = () => {
   const [schedule, setSchedule] = useState({ ...currentSchedule });
   const [movies, setMovies] = useState([]);
   const [theaters, setTheaters] = useState([]);
+  const [page, setPage] = useState(0);
   const [idApi, setIdApi] = useState({
     movie: "",
     theater: "",
     room: "",
   });
   const [rooms, setRooms] = useState([]);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const [totalPage, setTotalPage] = useState(0);
+  const [schedules, setSchedules] = useState([]);
+  const [idUpdate, setIdUpdate] = useState("");
+  const limit = 5;
+
+  const handleClose = () => {
+    setSchedule({ ...currentSchedule });
+    setOpen(false);
+  };
 
   const createSchedule = async () => {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SERVER_URL}/schedule/new/created-by/${idApi.theater}/${idApi.room}/${idApi.movie}`,
-      {
-        method: "POST",
-        body: JSON.stringify(schedule),
-      }
-    );
-    console.log(res);
-    // try {
-    //   const res = await scheduleApi.add(idApi.theater, idApi.room, idApi.movie, schedule);
-    //   console.log("aaa", res);
-    // } catch (err) {
-    //   console.log(err);
-    // }
+    try {
+      const res = await scheduleApi.add(idApi.theater, idApi.room, idApi.movie, schedule);
+      console.log("aaa", res);
+      if (!res) return;
+      handleClose();
+      getQuery(page, limit);
+      notifySuccess("Create");
+    } catch (err) {
+      console.log(err);
+      notifyFail("Create");
+    }
   };
 
   const getAllMoive = async () => {
@@ -104,6 +110,76 @@ const Page = () => {
     }
   };
 
+  const getQuery = async () => {
+    try {
+      const res = await scheduleApi.getQuery(page + 1, limit);
+      if (!res) return;
+      console.log(res);
+      setTotalPage(res.totalPage);
+      setSchedules(res.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const getDetail = async (id) => {
+    try {
+      const res = await scheduleApi.getDetail(id);
+      if (!res) return;
+      console.log(res);
+      setSchedule({
+        time: res.time,
+        price: res.price,
+        duration: res.duration,
+        startTime: res.startTime,
+        description: res.description,
+        endTime: res.endTime,
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const update = async () => {
+    try {
+      const data = {
+        time: schedule.time,
+        startTime: schedule.startTime,
+        duration: schedule.duration,
+        price: schedule.price,
+        status: "IS_ACTIVE",
+        description: schedule.description,
+      };
+      const res = await scheduleApi.update(idUpdate, { ...data });
+      if (!res) return;
+      console.log(res);
+      handleClose();
+      getQuery(page, limit);
+      notifySuccess("Update");
+    } catch (err) {
+      console.log(err);
+      notifyFail("Update");
+    }
+  };
+
+  const deleteSchedule = async (id) => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/room/delete/${id}`, {
+      method: "DELETE",
+    });
+    if (res.status == 200) {
+      console.log(res);
+      getQuery(page, limit);
+      notifySuccess("Delete");
+    } else {
+      console.log(res);
+      notifyFail("Delete");
+    }
+  };
+
+  useEffect(() => {
+    getQuery();
+  }, [page]);
+
   return (
     <>
       <Modal
@@ -129,6 +205,7 @@ const Page = () => {
           rooms={rooms}
           setIdApi={setIdApi}
           idApi={idApi}
+          update={update}
         />
       </Modal>
       <Head>
@@ -149,7 +226,18 @@ const Page = () => {
             setTitle={setTitle}
           />
           <Box sx={{ mt: 3 }}>
-            <ManagerListResult setOpen={setOpen} setTitle={setTitle} customers={customers} />
+            <ManagerListResult
+              setIdUpdate={setIdUpdate}
+              getDetail={getDetail}
+              page={page}
+              totalPage={totalPage}
+              setPage={setPage}
+              setOpen={setOpen}
+              setTitle={setTitle}
+              customers={customers}
+              schedules={schedules}
+              deleteSchedule={deleteSchedule}
+            />
           </Box>
         </Container>
       </Box>
@@ -167,6 +255,7 @@ const FormSchedule = ({
   setSchedule,
   schedule,
   getRoomByTheater,
+  update,
   rooms,
   createSchedule,
 }) => {
@@ -238,19 +327,32 @@ const FormSchedule = ({
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <DateTimePicker
             renderInput={(props) => <TextField {...props} />}
-            label="Time"
-            value={schedule.startTime}
+            value={dayjs(schedule.startTime)}
+            label="Start time"
             onChange={(newValue) => {
-              const value = new Date(newValue.$d);
               setSchedule({
                 ...schedule,
-                time: `${value}`,
-                startTime: `${value}`,
-                date: `${value.getUTCFullYear()}-${value.getUTCMonth()}-${value.getDate()}`,
+                time: `${newValue.$y}-${newValue.$M + 1}-${newValue.$D} ${newValue.$H}:${
+                  newValue.$m
+                }:${newValue.$s}`,
+                startTime: `${newValue.$y}-${newValue.$M + 1}-${newValue.$D} ${newValue.$H}:${
+                  newValue.$m
+                }:${newValue.$s}`,
+                date: `${newValue.$y}-${newValue.$M + 1}-${newValue.$D}`,
               });
             }}
           />
         </LocalizationProvider>
+        {title !== "Create" && (
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DateTimePicker
+              renderInput={(props) => <TextField {...props} />}
+              label="End time"
+              value={schedule.endTime}
+              disabled
+            />
+          </LocalizationProvider>
+        )}
         <TextField
           label="Duration"
           type="text"
@@ -278,7 +380,7 @@ const FormSchedule = ({
             if (title === "Create") {
               createSchedule();
             } else {
-              return;
+              update();
             }
           }}
         >

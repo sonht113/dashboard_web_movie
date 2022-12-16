@@ -20,14 +20,18 @@ import { getInitials } from "../../utils/get-initials";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 
-export const ManagerListResult = ({ customers, setOpen, setTitle, ...rest }) => {
-  const [limit, setLimit] = useState(10);
-  const [page, setPage] = useState(0);
-
-  const handleLimitChange = (event) => {
-    setLimit(event.target.value);
-  };
-
+export const ManagerListResult = ({
+  schedules,
+  setOpen,
+  setTitle,
+  totalPage,
+  setIdUpdate,
+  getDetail,
+  setPage,
+  deleteSchedule,
+  page,
+  ...rest
+}) => {
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
   };
@@ -48,57 +52,63 @@ export const ManagerListResult = ({ customers, setOpen, setTitle, ...rest }) => 
               </TableRow>
             </TableHead>
             <TableBody>
-              {customers.slice(0, limit).map((customer) => (
-                <TableRow hover key={customer.id}>
-                  <TableCell>
-                    <Box
-                      sx={{
-                        alignItems: "center",
-                        display: "flex",
-                      }}
-                    >
-                      <Avatar src={customer.avatarUrl} sx={{ mr: 2 }}>
-                        {getInitials(customer.name)}
-                      </Avatar>
-                      <Typography color="textPrimary" variant="body1">
-                        {customer.name}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>{customer.email}</TableCell>
-                  <TableCell>
-                    {`${customer.address.city}, ${customer.address.state}, ${customer.address.country}`}
-                  </TableCell>
-                  <TableCell>{customer.phone}</TableCell>
-                  <TableCell>2022-12-09</TableCell>
-                  <TableCell align="center">
-                    <Button
-                      onClick={() => {
-                        setTitle("Update");
-                        setOpen(true);
-                      }}
-                    >
-                      <RemoveRedEyeIcon color="success" />
-                    </Button>
-                    <Button>
-                      <DeleteForeverIcon color="error" />
-                    </Button>
+              {schedules.length > 0 ? (
+                schedules.map((item) => (
+                  <TableRow hover key={item?.id}>
+                    <TableCell>
+                      <Box
+                        sx={{
+                          alignItems: "center",
+                          display: "flex",
+                        }}
+                      >
+                        <Typography color="textPrimary" variant="body1">
+                          {item?.name}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>{item?.theaterName}</TableCell>
+                    <TableCell>{item?.room}</TableCell>
+                    <TableCell>{item?.createDate}</TableCell>
+                    <TableCell>{item?.status}</TableCell>
+                    <TableCell align="center">
+                      <Button
+                        onClick={() => {
+                          getDetail(item?.id);
+                          setIdUpdate(item?.id);
+                          setTitle("Update");
+                          setOpen(true);
+                        }}
+                      >
+                        <RemoveRedEyeIcon color="success" />
+                      </Button>
+                      <Button onClick={() => deleteSchedule(item?.id)}>
+                        <DeleteForeverIcon color="error" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan="6" sx={{ textAlign: "center" }}>
+                    Not have any data
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </Box>
       </PerfectScrollbar>
-      <TablePagination
-        component="div"
-        count={customers.length}
-        onPageChange={handlePageChange}
-        onRowsPerPageChange={handleLimitChange}
-        page={page}
-        rowsPerPage={limit}
-        rowsPerPageOptions={[5, 10, 25]}
-      />
+      {totalPage > 0 && (
+        <TablePagination
+          component="div"
+          count={totalPage}
+          onPageChange={handlePageChange}
+          page={page}
+          rowsPerPage={5}
+          rowsPerPageOptions={[5, 10, 25]}
+        />
+      )}
     </Card>
   );
 };
