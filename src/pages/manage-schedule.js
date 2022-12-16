@@ -69,10 +69,9 @@ const Page = () => {
   const createSchedule = async () => {
     try {
       const res = await scheduleApi.add(idApi.theater, idApi.room, idApi.movie, schedule);
-      console.log("aaa", res);
       if (!res) return;
       handleClose();
-      getQuery(page, limit);
+      getQuery(page + 1, limit);
       notifySuccess("Create");
     } catch (err) {
       console.log(err);
@@ -114,7 +113,6 @@ const Page = () => {
     try {
       const res = await scheduleApi.getQuery(page + 1, limit);
       if (!res) return;
-      console.log(res);
       setTotalPage(res.totalPage);
       setSchedules(res.data);
     } catch (err) {
